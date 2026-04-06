@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polymarket Quant Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #0c0c0e;
+            --bg-secondary: #16161a;
+            --bg-tertiary: #1e1e24;
+            --border: #2a2a30;
+            --text: #e0e0e6;
+            --text-muted: #a0a0af;
+            --accent: #6366f1;
+            --accent-dark: #4f46e5;
+            --green: #10b981;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --purple: #8b5cf6;
+            --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0 2rem;
+        }
+
+        .summary-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .summary-card .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .summary-card .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: var(--mono);
+        }
+
+        .summary-card .change {
+            font-size: 0.8rem;
+            margin-top: 0.2rem;
+            color: var(--green);
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .filter-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .filter-group select {
+            background: var(--bg-tertiary);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.4rem 0.6rem;
+            font-size: 0.9rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: var(--accent);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-family: var(--mono);
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .up { color: var(--green); }
+        .down { color: var(--red); }
+        .neutral { color: var(--yellow); }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: var(--mono);
+        }
+
+        .status-badge.up {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--green);
+        }
+
+        .status-badge.down {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        .notes {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+
+        .notes h3 {
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .notes ul {
+            padding-left: 1.5rem;
+        }
+
+        .notes li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Polymarket Quant Dashboard</h1>
+            <p class="text-muted">Snapshot: <span id="snapshot-date"></span> | Latest Pred: <span id="latest-pred-date"></span></p>
+        </header>
+
+        <div class="summary-bar" id="summary-bar"></div>
+
+        <div class="tab-container">
+            <button class="tab active" data-tab="overview">Overview</button>
+            <button class="tab" data-tab="predictions">Predictions</button>
+            <button class="tab" data-tab="evaluation">Model Evaluation</button>
+            <button class="tab" data-tab="features">Top Features</button>
+            <button class="tab" data-tab="notes">Methodology & Notes</button>
+        </div>
+
+        <div class="tab-content active" id="overview-tab">
+            <h2>Latest Signals</h2>
+            <div class="grid" id="latest-signals"></div>
+        </div>
+
+        <div class="tab-content" id="predictions-tab">
+            <div class="filter-group">
+                <label>
+                    Ticker:
+                    <select id="pred-ticker-filter"></select>
+                </label>
+                <label>
+                    Horizon:
+                    <select id="pred-horizon-filter"></select>
+                </label>
+            </div>
+
+            <div class="card">
+                <h3>Prediction Trend</h3>
+                <div class="chart-container">
+                    <canvas id="pred-trend-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Prediction History Table (OOS = Out-of-Sample)</h3>
+                <table id="pred-table"></table>
+            </div>
+        </div>
+
+        <div class="tab-content" id="evaluation-tab">
+            <div class="filter-group">
+                <label>
+                    Ticker:
+                    <select id="eval-ticker-filter"></select>
+                </label>
+                <label>
+                    Horizon:
+                    <select id="eval-horizon-filter"></select>
+                </label>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <h3>AUC Trend</h3>
+                    <div class="chart-container">
+                        <canvas id="auc-chart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Accuracy Trend</h3>
+                    <div class="chart-container">
+                        <canvas id="accuracy-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="features-tab">
+            <div class="filter-group">
+                <label>
+                    Ticker:
+                    <select id="feature-ticker-filter"></select>
+                </label>
+                <label>
+                    Horizon:
+                    <select id="feature-horizon-filter"></select>
+                </label>
+            </div>
+
+            <div class="card">
+                <h3>Top SHAP Features (Latest Model)</h3>
+                <table id="features-table"></table>
+            </div>
+        </div>
+
+        <div class="tab-content" id="notes-tab">
+            <div class="notes">
+                <h3>Methodology</h3>
+                <ul>
+                    <li><strong>Training:</strong> Expanding window out-of-sample (OOS) training. 60 days minimum training window.</li>
+                    <li><strong>Model:</strong> LightGBM classification task. Targets: return_next_1d > 0, return_next_5d > 0.</li>
+                    <li><strong>OOS:</strong> Historical out-of-sample predictions, no future data leakage.</li>
+                    <li><strong>AUC & Accuracy:</strong> auc_all / accuracy_all are computed from all OOS records up to eval_date; auc_recent / accuracy_recent from most recent 50 records.</li>
+                    <li><strong>SHAP:</strong> Aggregate feature importance from latest full model training.</li>
+                </ul>
+
+                <h3>Important Notes</h3>
+                <ul>
+                    <li><strong>pred_date:</strong> Each asset uses its own latest valid trading day (not a unified date). Bitcoin runs 24/7, equities follow their market calendars.</li>
+                    <li><strong>Current version:</strong> MVP 1.0. Historical predictions are read from <code>app_oos_predictions</code>.</li>
+                    <li><strong>Time windows:</strong> Current data range: 2025-09-30 to 2026-03-29.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let data = {};
+        let charts = {};
+
+        async function loadData() {
+            const res = await fetch('data/dashboard-data.json');
+            data = await res.json();
+            initDashboard();
+        }
+
+        function initDashboard() {
+            document.getElementById('snapshot-date').textContent = data.summary.snapshot_date;
+            document.getElementById('latest-pred-date').textContent = data.summary.latest_pred_date_max;
+            renderSummaryBar();
+            renderLatestSignals();
+            initFilters();
+            renderPredictionChart();
+            renderPredictionTable();
+            renderEvalCharts();
+            renderFeaturesTable();
+            bindTabEvents();
+        }
+
+        function renderSummaryBar() {
+            const bar = document.getElementById('summary-bar');
+            const items = [
+                { label: 'OOS Records', value: data.summary.oos_record_count },
+                { label: 'Eval Points', value: data.summary.eval_record_count },
+                { label: 'Assets × Horizon', value: data.summary.asset_horizon_count },
+                { label: 'Avg Recent AUC', value: data.summary.avg_recent_auc?.toFixed(4) || '-' },
+                { label: 'Best Signal', value: `${data.summary.best_signal?.ticker || '-'} ${data.summary.best_signal?.auc_recent?.toFixed(4) || ''}` }
+            ];
+            bar.innerHTML = items.map(item => `
+                <div class="summary-card">
+                    <div class="label">${item.label}</div>
+                    <div class="value">${item.value}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderLatestSignals() {
+            const container = document.getElementById('latest-signals');
+            container.innerHTML = data.latest_signals.map(sig => {
+                const hit = sig.y_true_dir != null ? (sig.y_true_dir === sig.y_pred_dir ? '✅' : '❌') : '';
+                const dirClass = sig.y_pred_dir === 1 ? 'up' : 'down';
+                const dirLabel = sig.y_pred_dir === 1 ? 'LONG' : 'SHORT';
+                return `
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <h3 style="margin: 0;">${sig.ticker}</h3>
+                            <span>${sig.horizon}</span>
+                        </div>
+                        <div class="status-badge ${dirClass}">${dirLabel} ${sig.y_prob.toFixed(4)}</div>
+                        <div style="margin-top: 1rem; font-size: 0.9rem;">
+                            <div>pred_date: <span style="font-family: var(--mono);">${sig.pred_date}</span></div>
+                            <div>train_end: <span style="font-family: var(--mono);">${sig.train_end}</span></div>
+                            <div>auc_all: <span>${sig.auc_all?.toFixed(4) || '-'}</span></div>
+                            <div>auc_recent: <span>${sig.auc_recent?.toFixed(4) || '-'}</span></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function initFilters() {
+            const tickers = [...new Set(data.predictions.map(p => p.ticker))];
+            const horizons = [...new Set(data.predictions.map(p => p.horizon))];
+            const tickerOpts = tickers.map(t => `<option value="${t}">${t}</option>`).join('');
+            const horizonOpts = horizons.map(h => `<option value="${h}">${h}</option>`).join('');
+
+            document.getElementById('pred-ticker-filter').innerHTML = tickerOpts;
+            document.getElementById('pred-horizon-filter').innerHTML = horizonOpts;
+            document.getElementById('eval-ticker-filter').innerHTML = tickerOpts;
+            document.getElementById('eval-horizon-filter').innerHTML = horizonOpts;
+            document.getElementById('feature-ticker-filter').innerHTML = tickerOpts;
+            document.getElementById('feature-horizon-filter').innerHTML = horizons.map(h => `<option value="${h}">${h}</option>`).join('');
+
+            document.getElementById('pred-ticker-filter').addEventListener('change', () => {
+                renderPredictionChart();
+                renderPredictionTable();
+            });
+            document.getElementById('pred-horizon-filter').addEventListener('change', () => {
+                renderPredictionChart();
+                renderPredictionTable();
+            });
+            document.getElementById('eval-ticker-filter').addEventListener('change', renderEvalCharts);
+            document.getElementById('eval-horizon-filter').addEventListener('change', renderEvalCharts);
+            document.getElementById('feature-ticker-filter').addEventListener('change', renderFeaturesTable);
+            document.getElementById('feature-horizon-filter').addEventListener('change', renderFeaturesTable);
+        }
+
+        function renderPredictionChart() {
+            const ticker = document.getElementById('pred-ticker-filter').value;
+            const horizon = document.getElementById('pred-horizon-filter').value;
+            const filtered = data.predictions.filter(p => p.ticker === ticker && p.horizon === horizon);
+            const labels = filtered.map(p => p.pred_date);
+            const probs = filtered.map(p => p.y_prob);
+            const actual = filtered.map(p => p.y_true_dir === 1 ? 1 : 0);
+            const predDir = filtered.map(p => p.y_pred_dir === 1 ? 1 : 0);
+
+            const ctx = document.getElementById('pred-trend-chart').getContext('2d');
+            if (charts.predTrend) charts.predTrend.destroy();
+
+            charts.predTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Long Probability',
+                            data: probs,
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Actual',
+                            data: actual,
+                            borderColor: '#10b981',
+                            pointRadius: 4,
+                            pointStyle: 'circle',
+                            borderWidth: 0,
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: 'Predicted',
+                            data: predDir,
+                            borderColor: '#ef4444',
+                            pointRadius: 2,
+                            pointStyle: 'crossRot',
+                            borderWidth: 0,
+                            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255,255,255,0.05)'
+                            },
+                            ticks: {
+                                color: 'rgba(255,255,255,0.5)'
+                            }
+                        },
+                        y: {
+                            min: 0,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'Probability',
+                                color: 'rgba(255,255,255,0.7)'
+                            },
+                            grid: {
+                                color: 'rgba(255,255,255,0.05)'
+                            },
+                            ticks: {
+                                color: 'rgba(255,255,255,0.5)'
+                            }
+                        },
+                        y1: {
+                            min: 0,
+                            max: 1,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Direction',
+                                color: 'rgba(255,255,255,0.7)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                color: 'rgba(255,255,255,0.5)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(255,255,255,0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderPredictionTable() {
+            const ticker = document.getElementById('pred-ticker-filter').value;
+            const horizon = document.getElementById('pred-horizon-filter').value;
+            const filtered = data.predictions.filter(p => p.ticker === ticker && p.horizon === horizon);
+            const table = document.getElementById('pred-table');
+            table.innerHTML = `
+                <tr>
+                    <th>pred_date</th>
+                    <th>y_true</th>
+                    <th>y_pred</th>
+                    <th>prob</th>
+                    <th>train_end</th>
+                </tr>
+                ${filtered.slice(-30).reverse().map(p => `
+                <tr>
+                    <td>${p.pred_date}</td>
+                    <td>${p.y_true_dir == null ? '-' : p.y_true_dir === 1 ? '<span class="up">▲</span>' : '<span class="down">▼</span>'}</td>
+                    <td>${p.y_pred_dir === 1 ? '<span class="up">▲</span>' : '<span class="down">▼</span>'}</td>
+                    <td style="font-family: var(--mono);">${p.y_prob.toFixed(4)}</td>
+                    <td style="font-family: var(--mono);">${p.train_end}</td>
+                </tr>
+                `).join('')}
+            `;
+        }
+
+        function renderEvalCharts() {
+            const ticker = document.getElementById('eval-ticker-filter').value;
+            const horizon = document.getElementById('eval-horizon-filter').value;
+            const filtered = data.evaluations.filter(e => e.ticker === ticker && e.horizon === horizon);
+            const labels = filtered.map(e => e.eval_date);
+            const aucAll = filtered.map(e => e.auc_all);
+            const aucRecent = filtered.map(e => e.auc_recent);
+            const accAll = filtered.map(e => e.accuracy_all);
+            const accRecent = filtered.map(e => e.accuracy_recent);
+
+            const ctxAuc = document.getElementById('auc-chart').getContext('2d');
+            if (charts.auc) charts.auc.destroy();
+            charts.auc = new Chart(ctxAuc, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'AUC All', data: aucAll, borderColor: '#6366f1', tension: 0.4, fill: false },
+                        { label: 'AUC Recent', data: aucRecent, borderColor: '#8b5cf6', tension: 0.4, fill: false }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { min: 0, max: 1, ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    },
+                    plugins: {
+                        legend: { labels: { color: 'rgba(255,255,255,0.7)' } }
+                    }
+                }
+            });
+
+            const ctxAcc = document.getElementById('accuracy-chart').getContext('2d');
+            if (charts.acc) charts.acc.destroy();
+            charts.acc = new Chart(ctxAcc, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Accuracy All', data: accAll, borderColor: '#10b981', tension: 0.4, fill: false },
+                        { label: 'Accuracy Recent', data: accRecent, borderColor: '#f59e0b', tension: 0.4, fill: false }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { min: 0, max: 1, ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    },
+                    plugins: {
+                        legend: { labels: { color: 'rgba(255,255,255,0.7)' } }
+                    }
+                }
+            });
+        }
+
+        function renderFeaturesTable() {
+            const ticker = document.getElementById('feature-ticker-filter').value;
+            const horizon = document.getElementById('feature-horizon-filter').value;
+            const filtered = data.top_features.filter(f => f.ticker === ticker && f.horizon === horizon);
+            const table = document.getElementById('features-table');
+            table.innerHTML = `
+                <tr>
+                    <th>rank</th>
+                    <th>feature</th>
+                    <th>mean_shap</th>
+                    <th>mean_abs_shap</th>
+                </tr>
+                ${filtered.map(f => `
+                <tr>
+                    <td>${f.rank}</td>
+                    <td style="font-family: var(--mono); font-size: 0.75rem;">${f.feature}</td>
+                    <td>${f.mean_shap.toFixed(6)}</td>
+                    <td>${f.mean_abs_shap.toFixed(6)}</td>
+                </tr>
+                `).join('')}
+            `;
+        }
+
+        function bindTabEvents() {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+                    tab.classList.add('active');
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+
+                    if (tabId === 'predictions') {
+                        setTimeout(renderPredictionChart, 100);
+                    }
+                    if (tabId === 'evaluation') {
+                        setTimeout(renderEvalCharts, 100);
+                    }
+                    if (tabId === 'features') {
+                        setTimeout(renderFeaturesTable, 100);
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
