@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polymarket Quant Dashboard</title>
+    <title>Polymarket量化信号研究 · Polymarket Signal Research</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -239,46 +239,46 @@
 <body>
     <div class="container">
         <header>
-            <h1>Polymarket Quant Dashboard</h1>
-            <p class="text-muted">Snapshot: <span id="snapshot-date"></span> | Latest Pred: <span id="latest-pred-date"></span></p>
+            <h1>Polymarket量化信号研究 <span style="font-size: 1rem; color: var(--text-muted); font-weight: 500;">Polymarket Signal Research</span></h1>
+            <p class="text-muted">快照日期 Snapshot: <span id="snapshot-date"></span> | 最新预测日 Latest Pred: <span id="latest-pred-date"></span></p>
         </header>
 
         <div class="summary-bar" id="summary-bar"></div>
 
         <div class="tab-container">
-            <button class="tab active" data-tab="overview">Overview</button>
-            <button class="tab" data-tab="predictions">Predictions</button>
-            <button class="tab" data-tab="evaluation">Model Evaluation</button>
-            <button class="tab" data-tab="features">Top Features</button>
-            <button class="tab" data-tab="notes">Methodology & Notes</button>
+            <button class="tab active" data-tab="overview">总览 Overview</button>
+            <button class="tab" data-tab="predictions">预测 Predictions</button>
+            <button class="tab" data-tab="evaluation">模型评估 Model Evaluation</button>
+            <button class="tab" data-tab="features">关键特征 Top Features</button>
+            <button class="tab" data-tab="notes">方法说明 Methodology & Notes</button>
         </div>
 
         <div class="tab-content active" id="overview-tab">
-            <h2>Latest Signals</h2>
+            <h2>最新信号 Latest Signals</h2>
             <div class="grid" id="latest-signals"></div>
         </div>
 
         <div class="tab-content" id="predictions-tab">
             <div class="filter-group">
                 <label>
-                    Ticker:
+                    资产 Ticker:
                     <select id="pred-ticker-filter"></select>
                 </label>
                 <label>
-                    Horizon:
+                    预测周期 Horizon:
                     <select id="pred-horizon-filter"></select>
                 </label>
             </div>
 
             <div class="card">
-                <h3>Prediction Trend</h3>
+                <h3>预测趋势 Prediction Trend</h3>
                 <div class="chart-container">
                     <canvas id="pred-trend-chart"></canvas>
                 </div>
             </div>
 
             <div class="card">
-                <h3>Prediction History Table (OOS = Out-of-Sample)</h3>
+                <h3>历史预测明细 Prediction History (OOS = Out-of-Sample，样本外)</h3>
                 <table id="pred-table"></table>
             </div>
         </div>
@@ -286,24 +286,24 @@
         <div class="tab-content" id="evaluation-tab">
             <div class="filter-group">
                 <label>
-                    Ticker:
+                    资产 Ticker:
                     <select id="eval-ticker-filter"></select>
                 </label>
                 <label>
-                    Horizon:
+                    预测周期 Horizon:
                     <select id="eval-horizon-filter"></select>
                 </label>
             </div>
 
             <div class="grid">
                 <div class="card">
-                    <h3>AUC Trend</h3>
+                    <h3>AUC 趋势 AUC Trend</h3>
                     <div class="chart-container">
                         <canvas id="auc-chart"></canvas>
                     </div>
                 </div>
                 <div class="card">
-                    <h3>Accuracy Trend</h3>
+                    <h3>准确率趋势 Accuracy Trend</h3>
                     <div class="chart-container">
                         <canvas id="accuracy-chart"></canvas>
                     </div>
@@ -314,24 +314,24 @@
         <div class="tab-content" id="features-tab">
             <div class="filter-group">
                 <label>
-                    Ticker:
+                    资产 Ticker:
                     <select id="feature-ticker-filter"></select>
                 </label>
                 <label>
-                    Horizon:
+                    预测周期 Horizon:
                     <select id="feature-horizon-filter"></select>
                 </label>
             </div>
 
             <div class="card">
-                <h3>Top SHAP Features (Latest Model)</h3>
+                <h3>关键特征 Top SHAP Features（最新模型 Latest Model）</h3>
                 <table id="features-table"></table>
             </div>
         </div>
 
         <div class="tab-content" id="notes-tab">
             <div class="notes">
-                <h3>Methodology</h3>
+                <h3>方法说明 Methodology</h3>
                 <ul>
                     <li><strong>Training:</strong> Expanding window out-of-sample (OOS) training. 60 days minimum training window.</li>
                     <li><strong>Model:</strong> LightGBM classification task. Targets: return_next_1d > 0, return_next_5d > 0.</li>
@@ -340,7 +340,7 @@
                     <li><strong>SHAP:</strong> Aggregate feature importance from latest full model training.</li>
                 </ul>
 
-                <h3>Important Notes</h3>
+                <h3>重要备注 Important Notes</h3>
                 <ul>
                     <li><strong>pred_date:</strong> Each asset uses its own latest valid trading day (not a unified date). Bitcoin runs 24/7, equities follow their market calendars.</li>
                     <li><strong>Current version:</strong> MVP 1.0. Historical predictions are read from <code>app_oos_predictions</code>.</li>
@@ -376,11 +376,11 @@
         function renderSummaryBar() {
             const bar = document.getElementById('summary-bar');
             const items = [
-                { label: 'OOS Records', value: data.summary.oos_record_count },
-                { label: 'Eval Points', value: data.summary.eval_record_count },
-                { label: 'Assets × Horizon', value: data.summary.asset_horizon_count },
-                { label: 'Avg Recent AUC', value: data.summary.avg_recent_auc?.toFixed(4) || '-' },
-                { label: 'Best Signal', value: `${data.summary.best_signal?.ticker || '-'} ${data.summary.best_signal?.auc_recent?.toFixed(4) || ''}` }
+                { label: '样本外预测数 OOS Records', value: data.summary.oos_record_count },
+                { label: '评估点数 Eval Points', value: data.summary.eval_record_count },
+                { label: '资产 × 周期 Assets × Horizon', value: data.summary.asset_horizon_count },
+                { label: '近期平均 AUC Avg Recent AUC', value: data.summary.avg_recent_auc?.toFixed(4) || '-' },
+                { label: '最强信号 Best Signal', value: `${data.summary.best_signal?.ticker || '-'} ${data.summary.best_signal?.auc_recent?.toFixed(4) || ''}` }
             ];
             bar.innerHTML = items.map(item => `
                 <div class="summary-card">
@@ -404,10 +404,10 @@
                         </div>
                         <div class="status-badge ${dirClass}">${dirLabel} ${sig.y_prob.toFixed(4)}</div>
                         <div style="margin-top: 1rem; font-size: 0.9rem;">
-                            <div>pred_date: <span style="font-family: var(--mono);">${sig.pred_date}</span></div>
-                            <div>train_end: <span style="font-family: var(--mono);">${sig.train_end}</span></div>
-                            <div>auc_all: <span>${sig.auc_all?.toFixed(4) || '-'}</span></div>
-                            <div>auc_recent: <span>${sig.auc_recent?.toFixed(4) || '-'}</span></div>
+                            <div>预测日 Pred Date: <span style="font-family: var(--mono);">${sig.pred_date}</span></div>
+                            <div>训练截止 Train End: <span style="font-family: var(--mono);">${sig.train_end}</span></div>
+                            <div>累计 AUC AUC All: <span>${sig.auc_all?.toFixed(4) || '-'}</span></div>
+                            <div>近期 AUC AUC Recent: <span>${sig.auc_recent?.toFixed(4) || '-'}</span></div>
                         </div>
                     </div>
                 `;
@@ -509,7 +509,7 @@
                             max: 1,
                             title: {
                                 display: true,
-                                text: 'Probability',
+                                text: '上涨概率 Long Probability',
                                 color: 'rgba(255,255,255,0.7)'
                             },
                             grid: {
@@ -525,7 +525,7 @@
                             position: 'right',
                             title: {
                                 display: true,
-                                text: 'Direction',
+                                text: '方向 Direction',
                                 color: 'rgba(255,255,255,0.7)'
                             },
                             grid: {
@@ -554,11 +554,11 @@
             const table = document.getElementById('pred-table');
             table.innerHTML = `
                 <tr>
-                    <th>pred_date</th>
-                    <th>y_true</th>
-                    <th>y_pred</th>
-                    <th>prob</th>
-                    <th>train_end</th>
+                    <th>预测日 Pred Date</th>
+                    <th>实际方向 Actual</th>
+                    <th>预测方向 Predicted</th>
+                    <th>上涨概率 Prob</th>
+                    <th>训练截止 Train End</th>
                 </tr>
                 ${filtered.slice(-30).reverse().map(p => `
                 <tr>
@@ -636,10 +636,10 @@
             const table = document.getElementById('features-table');
             table.innerHTML = `
                 <tr>
-                    <th>rank</th>
-                    <th>feature</th>
-                    <th>mean_shap</th>
-                    <th>mean_abs_shap</th>
+                    <th>排名 Rank</th>
+                    <th>特征 Feature</th>
+                    <th>平均 SHAP Mean SHAP</th>
+                    <th>平均绝对影响 Mean Abs SHAP</th>
                 </tr>
                 ${filtered.map(f => `
                 <tr>
