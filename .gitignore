@@ -30,5 +30,6 @@ build/
 .vercel/
 *.log
 
-# Local generated files that can be rebuilt
+# Local generated files
 public/data/*.json
+!public/data/dashboard-data.json
