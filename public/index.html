@@ -353,6 +353,16 @@
     <script>
         let data = {};
         let charts = {};
+        const tickerNameMap = {
+            '^GSPC': '标普500',
+            '^IXIC': '纳斯达克',
+            'GC=F': 'COMEX黄金',
+            'CL=F': 'WTI原油',
+            'BTC-USD': '比特币',
+            '^HSI': '恒生指数',
+            '2828.HK': '恒生科技ETF',
+            '000300.SS': '沪深300'
+        }
 
         async function loadData() {
             const res = await fetch('data/dashboard-data.json');
@@ -380,7 +390,7 @@
                 { label: '评估点数', value: data.summary.eval_record_count },
                 { label: '资产 × 周期', value: data.summary.asset_horizon_count },
                 { label: '近期平均 AUC', value: data.summary.avg_recent_auc?.toFixed(4) || '-' },
-                { label: '最强信号', value: `${data.summary.best_signal?.ticker || '-'} ${data.summary.best_signal?.auc_recent?.toFixed(4) || ''}` }
+                { label: '最强信号', value: `${data.summary.best_signal ? (tickerNameMap[data.summary.best_signal.ticker] || data.summary.best_signal.ticker) : '-'} ${data.summary.best_signal?.auc_recent?.toFixed(4) || ''}` }
             ];
             bar.innerHTML = items.map(item => `
                 <div class="summary-card">
@@ -399,7 +409,7 @@
                 return `
                     <div class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <h3 style="margin: 0;">${sig.ticker}</h3>
+                            <h3 style="margin: 0;">${tickerNameMap[sig.ticker] || sig.ticker} <span style="font-size: 0.8rem; color: var(--text-muted);">${sig.ticker}</span></h3>
                             <span>${sig.horizon}</span>
                         </div>
                         <div class="status-badge ${dirClass}">${dirLabel} ${sig.y_prob.toFixed(4)}</div>
@@ -417,7 +427,7 @@
         function initFilters() {
             const tickers = [...new Set(data.predictions.map(p => p.ticker))];
             const horizons = [...new Set(data.predictions.map(p => p.horizon))];
-            const tickerOpts = tickers.map(t => `<option value="${t}">${t}</option>`).join('');
+            const tickerOpts = tickers.map(t => `<option value="${t}">${tickerNameMap[t] || t}</option>`).join('');
             const horizonOpts = horizons.map(h => `<option value="${h}">${h}</option>`).join('');
 
             document.getElementById('pred-ticker-filter').innerHTML = tickerOpts;
