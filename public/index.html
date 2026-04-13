@@ -721,8 +721,14 @@
                 <tr>
                     <td style="font-weight: ${f.rank <= 3 ? 'bold' : 'normal'};">${f.rank}</td>
                     <td style="font-family: var(--mono); font-size: 0.75rem;">${(() => { let name = f.feature; for (const [key, val] of Object.entries(featureNameMap)) { name = name.replace(key, val); } return name; })()}</td>
-                    <td style="font-weight: bold; color: ${f.rank <= 3 ? 'var(--accent)' : 'inherit'}">${f.mean_abs_shap.toFixed(4)}</td>
-                    <td style="color: var(--text-muted);">${f.mean_shap.toFixed(6)}</td>
+                    <td style="font-weight: bold; color: ${f.rank <= 3 ? 'var(--accent)' : 'inherit'}; position: relative;">
+                        <div style="position: absolute; top: 0; left: 0; bottom: 0; width: ${Math.min(f.mean_abs_shap * 50, 100)}%; background: linear-gradient(to right, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.05)); z-index: 0;"></div>
+                        <div style="position: relative; z-index: 1;">${f.mean_abs_shap.toFixed(4)}</div>
+                    </td>
+                    <td style="color: var(--text-muted); position: relative;">
+                        <div style="position: absolute; top: 0; left: 0; bottom: 0; width: ${Math.min(Math.abs(f.mean_shap) * 50, 100)}%; background: ${f.mean_shap >= 0 ? 'linear-gradient(to right, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05))' : 'linear-gradient(to right, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05))'}; z-index: 0;"></div>
+                        <div style="position: relative; z-index: 1;">${f.mean_shap.toFixed(4)}</div>
+                    </td>
                 </tr>
                 `).join('')}
             `;
