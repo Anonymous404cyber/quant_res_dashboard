@@ -364,6 +364,31 @@
             '000300.SS': '沪深300'
         }
 
+        const featureNameMap = {
+            'theme_all': '全主题聚合',
+            'theme_top10': '主题Top10事件',
+            'theme_top3': '主题Top3事件',
+            'theme_top1': '主题Top1事件',
+            'us_politics': '美国政治主题',
+            'fed_macro': '美联储宏观主题',
+            'crypto_major': '加密货币主题',
+            'ai_bigtech': 'AI科技巨头主题',
+            'iran_middleeast': '伊朗中东主题',
+            '_yes_price': '事件概率',
+            '_price_diff_1d': '1日价格变化',
+            '_price_diff_5d': '5日价格变化',
+            '_price_diff_10d': '10日价格变化',
+            '_price_return_1d': '1日收益率',
+            '_price_return_5d': '5日收益率',
+            '_price_return_10d': '10日收益率',
+            'theme_top1_No1': '主题Top1事件',
+            'theme_top1_No2': '主题Top2事件',
+            'theme_top1_No3': '主题Top3事件',
+            'theme_top3_No1': 'Top3组第1事件',
+            'theme_top3_No2': 'Top3组第2事件',
+            'theme_top3_No3': 'Top3组第3事件'
+        }
+
         async function loadData() {
             const res = await fetch('data/dashboard-data.json');
             data = await res.json();
@@ -654,7 +679,7 @@
                 ${filtered.map(f => `
                 <tr>
                     <td>${f.rank}</td>
-                    <td style="font-family: var(--mono); font-size: 0.75rem;">${f.feature}</td>
+                    <td style="font-family: var(--mono); font-size: 0.75rem;">${(() => { let name = f.feature; for (const [key, val] of Object.entries(featureNameMap)) { name = name.replace(key, val); } return name; })()}</td>
                     <td>${f.mean_shap.toFixed(6)}</td>
                     <td>${f.mean_abs_shap.toFixed(6)}</td>
                 </tr>
