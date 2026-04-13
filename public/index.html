@@ -323,8 +323,10 @@
                 </label>
             </div>
 
+            <div id="feature-explainer"></div>
+
             <div class="card">
-                <h3>关键特征（SHAP）</h3>
+                <h3>特征重要性排名</h3>
                 <table id="features-table"></table>
             </div>
         </div>
@@ -667,21 +669,44 @@
         function renderFeaturesTable() {
             const ticker = document.getElementById('feature-ticker-filter').value;
             const horizon = document.getElementById('feature-horizon-filter').value;
-            const filtered = data.top_features.filter(f => f.ticker === ticker && f.horizon === horizon);
+            const filtered = data.top_features.filter(f => f.ticker === ticker && f.horizon === horizon).slice(0, 10);
+            
+            // 生成Top3特征解释
+            const top3 = filtered.slice(0, 3);
+            const explainer = document.getElementById('feature-explainer');
+            if (top3.length > 0) {
+                explainer.innerHTML = `
+                <div class="card">
+                    <h3>重要特征说明</h3>
+                    <div style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.8;">
+                        ${top3.map((f, idx) => {
+                            const name = (() => { let n = f.feature; for (const [k, v] of Object.entries(featureNameMap)) { n = n.replace(k, v); } return n; })();
+                            return `<div><strong>第${idx+1}名：${name}</strong><br/>重要性：${f.mean_abs_shap.toFixed(4)} → 是对预测影响最大的特征，代表该类主题事件的变化会显著影响${tickerNameMap[ticker] || ticker}的未来走势</div>`;
+                        }).join('')}
+                        <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+                            说明：平均绝对影响越大，该特征的重要性越高；SHAP正负方向仅作参考，聚合特征的方向无明确业务含义
+                        </div>
+                    </div>
+                </div>
+                `;
+            } else {
+                explainer.innerHTML = '';
+            }
+
             const table = document.getElementById('features-table');
             table.innerHTML = `
                 <tr>
                     <th>排名</th>
                     <th>特征</th>
-                    <th>平均 SHAP</th>
-                    <th>平均绝对影响</th>
+                    <th>平均绝对影响<br/>(重要性)</th>
+                    <th style="color: var(--text-muted);">平均 SHAP<br/>(参考)</th>
                 </tr>
                 ${filtered.map(f => `
                 <tr>
-                    <td>${f.rank}</td>
+                    <td style="font-weight: ${f.rank <= 3 ? 'bold' : 'normal'};">${f.rank}</td>
                     <td style="font-family: var(--mono); font-size: 0.75rem;">${(() => { let name = f.feature; for (const [key, val] of Object.entries(featureNameMap)) { name = name.replace(key, val); } return name; })()}</td>
-                    <td>${f.mean_shap.toFixed(6)}</td>
-                    <td>${f.mean_abs_shap.toFixed(6)}</td>
+                    <td style="font-weight: bold; color: ${f.rank <= 3 ? 'var(--accent)' : 'inherit'}">${f.mean_abs_shap.toFixed(4)}</td>
+                    <td style="color: var(--text-muted);">${f.mean_shap.toFixed(6)}</td>
                 </tr>
                 `).join('')}
             `;
