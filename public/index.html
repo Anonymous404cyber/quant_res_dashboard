@@ -329,17 +329,20 @@
                 <h3>特征重要性排名</h3>
                 <table id="features-table"></table>
             </div>
-        </div>
-
-        <div class="tab-content" id="notes-tab">
             <div class="notes">
                 <h3>方法说明</h3>
                 <ul>
-                    <li><strong>Training:</strong> Expanding window out-of-sample (OOS) training. 60 days minimum training window.</li>
-                    <li><strong>Model:</strong> LightGBM classification task. Targets: return_next_1d > 0, return_next_5d > 0.</li>
-                    <li><strong>OOS:</strong> Historical out-of-sample predictions, no future data leakage.</li>
-                    <li><strong>AUC & Accuracy:</strong> auc_all / accuracy_all are computed from all OOS records up to eval_date; auc_recent / accuracy_recent from most recent 50 records.</li>
-                    <li><strong>SHAP:</strong> Aggregate feature importance from latest full model training.</li>
+                    <li><strong>训练逻辑</strong>：采用 expanding window 滚动样本外训练，最小训练窗口60天，无未来数据泄露</li>
+                    <li><strong>模型算法</strong>：LightGBM 二分类模型，预测目标为对应周期收益率>0的概率</li>
+                    <li><strong>预测类型</strong>：OOS（Out-of-Sample，样本外预测），所有预测均使用历史数据训练，不涉及任何未来信息</li>
+                    <li><strong>评价指标</strong>：AUC：衡量模型区分涨跌方向的能力，范围0-1，越高代表区分能力越强，0.5为随机猜测水平</li>
+                    <li><strong>特征解释</strong>：SHAP：模型解释方法，衡量每个特征对预测结果的影响大小，绝对值越大重要性越高</li>
+                    <li><strong>日期口径</strong>：pred_date 为对应资产的最后有效交易日，BTC 24小时交易，股票类遵循对应市场休市规则</li>
+                    <li><strong>当前版本</strong>：MVP 1.0，历史预测数据读取自 <code>app_oos_predictions</code> 表</li>
+                    <li><strong>数据覆盖区间</strong>：当前版本特征覆盖：2025年9月30日 ~ 2026年3月29日</li>
+                    <li><strong>特别说明</strong>：聚合类特征的SHAP正负方向仅作统计参考，无明确业务含义，仅参考重要性排名即可</li>
+                </ul>
+            </div>
                 </ul>
 
                 <h3>重要备注</h3>
