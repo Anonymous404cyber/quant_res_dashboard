@@ -669,7 +669,7 @@
         function renderFeaturesTable() {
             const ticker = document.getElementById('feature-ticker-filter').value;
             const horizon = document.getElementById('feature-horizon-filter').value;
-            const filtered = data.top_features.filter(f => f.ticker === ticker && f.horizon === horizon).slice(0, 10);
+            const filtered = data.top_features.filter(f => f.ticker === ticker && f.horizon === horizon && !f.feature.startsWith('theme_all')).slice(0, 10);
             
             // 生成Top3特征解释
             const top3 = filtered.slice(0, 3);
@@ -677,11 +677,27 @@
             if (top3.length > 0) {
                 explainer.innerHTML = `
                 <div class="card">
-                    <h3>重要特征说明</h3>
+                    <h3>🎯 核心信号说明</h3>
                     <div style="margin-top: 1rem; font-size: 0.9rem; line-height: 1.8;">
                         ${top3.map((f, idx) => {
                             const name = (() => { let n = f.feature; for (const [k, v] of Object.entries(featureNameMap)) { n = n.replace(k, v); } return n; })();
-                            return `<div><strong>第${idx+1}名：${name}</strong><br/>重要性：${f.mean_abs_shap.toFixed(4)} → 是对预测影响最大的特征，代表该类主题事件的变化会显著影响${tickerNameMap[ticker] || ticker}的未来走势</div>`;
+                            const importanceStars = '⭐'.repeat(Math.min(5, Math.round(f.mean_abs_shap * 10 / 2)));
+                            // 特征业务解释映射
+                            const explainMap = {
+                                '美联储宏观': '美联储加息/降息、政策表态类事件的概率变化，是影响美股、黄金等资产走势的核心因素，政策宽松预期上升时会显著利多风险资产',
+                                '伊朗中东': '伊朗、中东地缘冲突类事件的概率变化，战争/制裁风险上升时会导致市场避险情绪升温，利多黄金、利空股市',
+                                'AI科技巨头': 'AI巨头相关监管、业绩类事件的概率变化，反映科技板块整体景气度，对美股、港股科技类指数影响显著',
+                                '加密货币主题': '比特币等主流加密货币相关政策、监管事件的概率变化，直接影响加密资产价格',
+                                '美国政治主题': '美国大选、两院政治斗争类事件的概率变化，会影响市场对政策稳定性的预期'
+                            };
+                            let explain = '是对预测影响较大的特征，代表该类主题事件的变化会影响${tickerNameMap[ticker] || ticker}的未来走势';
+                            for (const [k, v] of Object.entries(explainMap)) {
+                                if (name.includes(k)) {
+                                    explain = v;
+                                    break;
+                                }
+                            }
+                            return `<div><strong>第${idx+1}名：${name}</strong><br/>重要程度：${importanceStars} · 得分：${f.mean_abs_shap.toFixed(4)}<br/>说明：${explain}</div>`;
                         }).join('')}
                         <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
                             说明：平均绝对影响越大，该特征的重要性越高；SHAP正负方向仅作参考，聚合特征的方向无明确业务含义
